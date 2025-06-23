@@ -1,0 +1,185 @@
+in progress
+# 42School : creating an Internet Relay Chat in ft_irc project
+
+## Purpose of the project
+This is a light description of the project.</br>
+The subject says :</br>
+Internet Relay Chat is a text communication protocol on the Internet. It is used for instantaneous communication, mainly in the form of group discussions chat channels, but can also be used for direct com- munication between two people.</br>
+IRC clients connect to IRC servers to access channels. The IRC servers are connected to each other to create networks.</br>
+
+The main of the project is to create an IRC server only, not any client.</br>
+Handling communication between two servers is not required.</br>
+
+The program will be named "ircserv".</br>
+It will take 2 arguments :
+  - the port number as first argument, which on server will allow incoming calls,
+  - the password as second one, with which clients will identify themselves when trying to connect on server.
+
+## Parsing on arguments
+The number of arguments is limited to 2.</br>
+Port is a number between 0 and 65535 included (ports are represented using a 16-bit unsigned integer in networking so there are 2^16 possibilities).</br>
+There isn't any restriction on the password. //is "" permitted ? Very longggggggg password to be tested.
+
+## Input signals
+The program could receive :
+  - a Signal Interrupt (SIGINT) with CTRL C,
+  - a Signal Quit (SIGQUIT) with CTRL \\.</br>
+To handle signals, signal function must be set.</br>
+This function specifies a way to handle the signals with the signal number specified (2 for SIGINT, 3 for SIQUIT).
+```C++
+#include <signal.h>
+
+signal(SIGINT, signalHandler);
+```
+where signalHandler is a pointer to a function which will be used to manage action on signal (displaying a message, exit, ...).</br>
+This function should follow the following prototype :
+```C++
+void signalHandler(int signal);
+```
+where signal will take the signal number.
+
+## Creation of the server
+To connect to a server, a client need to know :
+  - the port number(1),
+  - the password.
+
+(1)The port number is used to identify the specific service or application to reach on the device.</br>
+Indeed, on a device, several applications could use the network at the same time. The port number is a numerical identifier used to ensure that data is delivered to the correct application on the device.</br>
+
+### Server initialization
+To run a server need sockets.
+A socket is an endpoint for communication between two machines over a network. It allows processes to send and receive data, whether they are on the same device or different devices across the internet.
+
+Server side, a socket is created (server socket) for listening incoming connections.</br>
+This socket does not directly communicate with clients. However when an attempt for a new incoming connection is detected by the server, the server socket calls a function ("accept()") which will return a new client socket descriptor.</br>
+
+A server socket is defined by 3 elements :
+  - IP address to identify the server on the network,
+  - port number,
+  - protocol to define how the data is transmitted (TCP or UDP)(2).
+
+(2) TCP (Transmission Control Protocol) and UDP (User Datagram Protocol) are the two main transport layer protocols used for sending data over the internet. They define how data is sent and received between devices.</br>
+TCP establishes a connection before sending data and ensures it is delivered accurately and in order.</br>
+It is used for :
+  - web browsing (HTTP, HTTPS on ports 80, 443),
+  - file transfert (FTP on port 21),
+  - email (SMTP, IMAP, POP3),
+  - Secure Shell (SSH on port 22).
+ 
+UDP is a connectionless protocol, meaning it sends data without ensuring delivery. It’s faster but less reliable.</br>
+It is used for :
+  - online gaming,
+  - VoIP (Skype, Zoom, WhatsApp calls),
+  - live video streaming (YouTube, Twitch, Netflix, ...),
+  - DNS lookups.
+
+A socket using TCP is called stream socket.</br>
+A socket using UDP is called datagram socket.</br>
+
+#### Server socket creation :
+A server socket is created once at the start using the function socket(). Its prototype is defined as following :
+```C++
+<sys/socket.h>
+
+int socket(int domain, int type, int protocol)
+```
+where "domain" specifies the address family. It could take different values as :
+  - AF_INET for IPv4,
+  - AF_INET6 for IPv6, ...
+
+where "type" specifies the socket type. It could take the values :
+  - SOCK_STREAM for a stream socket,
+  - SOCK_DGRAM for a datagram socket.
+
+where "protocol" defines the protocol type. If "protocol" is set at 0, the system choose the default protocol for the given type.</br>
+
+The function returns an integer which is a file descriptor. If it fails, it returns -1.
+
+#### Server socket options :
+
+###### allowing socket reusing the address and the port:
+setsockopt() is a function used to configure options for a socket.</br>
+It could be used to allow the socket to reuse the address, especially for restarting a server quickly.</br>
+With this option, the server will be allowed to reuse the same port immediately after restarting, rather than waiting for the OS to release it and displaying an "Address already in use" error.</br>
+Its prototype is defined as following :
+```C++
+#include <sys/socket.h>
+
+int setsockopt(int socketFd, int level, int option1_name, const void *option1_value, socklen_t option1_len);
+int setsockopt(int socketFd, int level, int option2_name, const void *option2_value, socklen_t option2_len);
+```
+where "socketFd" is the file descriptor of the socket to configure.</br>
+where "level" indicate if the option applies to the socket level or to a specific protocol. If it concerns the socket level only, "level" will take the value "SOL_SOCKET".</br>
+where option1_name is the first option to set. To reuse the address, the option1_name will be set at SO_REUSEADDR.</br>
+where option1_value is a pointer to the value being set (typically it will point to the address of a variable enable set at 1).</br>
+where option1_len specifies the size of the option1_value (here sizeof(enable)).</br>
+where option2_name is the second option to set. To reuse the port, the option2_name will be set at SO_REUSEPORT.</br>
+where option2_value is a pointer to the value being set (typically it will point to the address of a variable enable set at 1).</br>
+where option2_len specifies the size of the option2_value (here sizeof(enable)).</br>
+The function returns -1 if it failed.
+
+###### set the socket to non-blocking mode :
+The server socket calls the function "accept()" when an attempt for a new incoming connection is detected by the server.</br>
+If accept() is blocking and still might freeze if something unexpected happens, the server could not check for new connections and handle multiple clients efficiently.
+To avoid this situation, it is possible to set the socket to non-blocking mode. To do this, the function "fcntl()" will be used, as a system call, to manipulate file descriptor properties. Its prototype is defined as follow :
+```C++
+#include <fcntl.h>
+
+int fcntl(int fildes, int cmd, int bits);
+```
+where "fildes" is the file descriptor of the socket to configure.</br>
+where "cmd" will take the value "F_SETFL" to set the file status flags. Its argument will be "bits" which will take "O_NONBLOCK".</br>
+If the function "fcntl()" fails, it returns -1.
+
+#### Bind the server socket with the server :
+After the creation of the server socket, the "bind()" function will bind the socket to the address and port number initialy defined for the server (passed as arguments of the program).</br>
+To do this, address and port number have to be stored in a data structure "sockaddr_in" as follow :
+```C++
+#include <netinet/in.h>
+
+struct sockaddr_in serverAddress;
+
+serverAddress.sin_family = AF_INET;
+serverAddress.sin_port = htons(portNumber);
+serverAddress.sin_addr.s_addr = INADDR_ANY;
+```
+where sin_family store the type of family address.</br>
+where sin_port store the port number as a network byte order.The function "htons()" (Host TO Network Short) ensures compatibility with the required format.</br>
+where sin_addr.s_addr defines the IP addresses which will be listened to. Only one address could be defined, or any addresses with the value "INADDR_ANY".</br>
+
+Then to bind the server socket to the server, the "bind()" function is used as follow :
+```C++
+#include <sys/socket.h>
+
+int bind(int socketfd, const struct sockaddr *addr, socklen_t addrlen);
+```
+where "socketFd" is the file descriptor of the server socket.</br>
+where "addr" is a pointer to the address of the structure containing the address and the port number of the server(2).</br>
+where "addrlen" is the size of the sockaddr structure as sizeof(addr).</br> 
+If the function "bind()" fails, it returns -1.
+
+(2)Note that a recast from sockaddr_in to sockaddr is necessary :
+```C++
+(struct sockaddr *)&serverAddress;
+```
+This works because sockaddr_in is a specialized version of sockaddr.
+
+#### Listen to the server socket :
+As soon as the server socket is bound to the server, the server socket is put in a passive mode : it is ready to receive connections. In other words, it means that it waits for a client to approach the server to make a connection and the OS starts queuing client connections.</br>
+To put the server socket in such a mode, the function "listen()" is used, as follow :
+```C++
+#include <sys/socket.h>
+
+int listen(int socketFd, int backlog);
+```
+where "socketFd" is the file descriptor of the server socket.</br>
+where "backlog" defines the maximum length to which the queue of pending connections for socketFd may grow. If a connection request arrives when the queue is full, the client may receive an error with an indication of ECONNREFUSE. "backlog" could be defined to a define value or to SOMAXCONN (for Linux, SOMAXCONN = 128).</br>
+If the function "listen()" fails, it returns -1.
+
+When a client connects, accept() removes it from the queue and returns a new client socket (client_fd).
+Accept() only deals with one client at a time. vs listen() ensures that multiple clients can try to connect simultaneously.
+
+
+```C++
+ssize_t send(int socket, const void *buffer, size_t length, int flags);
+```

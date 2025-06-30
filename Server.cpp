@@ -6,7 +6,7 @@
 /*   By: huvillat <huvillat@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 14:10:30 by rgobet            #+#    #+#             */
-/*   Updated: 2025/06/23 11:37:57 by rgobet           ###   ########.fr       */
+/*   Updated: 2025/06/27 20:52:01 by huvillat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,18 +15,20 @@
 Server::Server(std::string const &name, const char *port, std::string const &password)
 {
 	std::istringstream ss(port);
-	unsigned short  int result;
+	int result;
 	ss >> result;
 	if (ss.fail())
-		throw std::runtime_error("Error: Invalid integer format!");
+		throw std::runtime_error("Error: Invalid integer format! (Port: 1024 to 65 535)");
+	if (result < 0 || result > 65535)
+		throw std::runtime_error("Error: Invalid integer format! (Port: 1024 to 65 535)");
 	_name = name;
 	_port = result;
 	if (password.size() < 1 || password.size() > 10)
 		throw std::runtime_error("Error: Password size limit!");
-	for(size_t i = 0; password[i]; ++i){
+	for(size_t i = 0; password[i]; ++i)
 		if(isspace(password[i]))
 			throw std::runtime_error("Error: Password contains non-printable characters.");
-	}
+
 	_password = password;
 	std::memset(_buffer, 0, 514);
 	if (_port < 1024)
@@ -65,7 +67,10 @@ void	Server::startServer()
 		throw std::runtime_error("Error: setsockopt failed!");
 
 	if (bind(_serverSocket, (struct sockaddr*)&_serverAddress, sizeof(_serverAddress)) < 0)
+	{
+		close(_serverSocket);
 		throw std::runtime_error("Error: The bind between the socket and the server IP address is failing!");
+	}
 	if (listen(_serverSocket, 10) == -1)
 		throw std::runtime_error("Error: Listen failure on the server!");
 	newConnection();
@@ -120,7 +125,7 @@ void	Server::newClient()
 	int clientSocket = accept(_serverSocket, (struct sockaddr*)&clientAddr, &len);
 	if (clientSocket < 0)
 		return;
-	Client newClient(clientSocket, clientAddr, "", "", "", false);
+	Client newClient(clientSocket, "", "", "");
 	addClient(clientSocket, newClient);
 	pollfd clientPollFd;
 	clientPollFd.fd = clientSocket;
@@ -141,12 +146,25 @@ void Server::addPass(std::string str, Client &client)
 	while (end < str.length() && !std::isspace(str[end]))
 		++end;
 	std::string password = str.substr(pos, end - pos);
+	if(password.size() == 0)
+	{
+		std::string empty = "";
+		std::string cmd = "PASS";
+		std::string error = ERR_NEEDMOREPARAMS(CLIENT(empty, empty), cmd);
+		if (send(client.getClientSocket(), error.c_str(), error.size(), 0) == -1)
+			throw std::runtime_error("Error: An error occured while sending the message!");
+		return;
+	}
 	if (password == _password && !client.getPassServ())
-		client.setPassServ();
+		client.setPassServ(true);
+	else if (password != _password && client.getPassServ()){
+		client.setPassServ(false);
+	}
 }
 
 void Server::addNick(std::string str, Client &client)
 {
+	std::string	error, tmp, nick, rest;
 	if(client.getPassServ() == false)
 		return ;
 	size_t pos = str.find("NICK");
@@ -156,16 +174,18 @@ void Server::addNick(std::string str, Client &client)
 	while (pos < str.length() && std::isspace(str[pos]))
 		pos++;
 	if (pos >= str.length())
-		return;
+	{
+		error = ERR_NONICKNAMEGIVEN(std::string("Unregistred"));
+		if (send(client.getClientSocket(), error.c_str(), error.size(), 0) == -1)
+			throw std::runtime_error("Error: An error occured while sending the message!");
+	}
 	size_t end = pos;
 	while (end < str.length() && !std::isspace(str[end]))
 		end++;
-	std::string nick = str.substr(pos, end - pos);
+	nick = str.substr(pos, end - pos);
 	if (nick.empty() || nick[0] == '#')
 		return;
-	if (sameUsername(nick))
-		return;
-	std::string rest = str.substr(end);
+	rest = str.substr(end);
 	bool onlyWhitespace = true;
 	for (size_t i = 0; i < rest.length(); ++i)
 	{
@@ -175,12 +195,21 @@ void Server::addNick(std::string str, Client &client)
 			break;
 		}
 	}
+	if (getClients(nick).getClientSocket() != -1 || getClients(nick).getClientSocket() == client.getClientSocket())
+	{
+		error = ERR_NICKNAMEINUSEC(nick);
+		if (send(client.getClientSocket(), error.c_str(), error.size(), 0) == -1)
+			throw std::runtime_error("Error: An error occured while sending the message!");
+		return;
+	}
 	if (onlyWhitespace)
 		client.setNickname(nick);
 }
 
 void Server::addUser(std::string str, Client &client)
 {
+	std::string username, mode, unused, realname, error;
+
 	if(client.getPassServ() == false)
 		return ;
 	size_t pos = str.find("USER");
@@ -190,14 +219,23 @@ void Server::addUser(std::string str, Client &client)
 	while (pos < str.length() && std::isspace(str[pos]))
 		pos++;
 	if (pos >= str.length())
+	{
+		error = ERR_NEEDMOREPARAMS(std::string("Unregistred"), "USER");
+		if (send(client.getClientSocket(), error.c_str(), error.size(), 0) == -1)
+			throw std::runtime_error("Error: An error occured while sending the message!");
 		return;
+	}
 	std::string args = str.substr(pos);
 	std::istringstream ss(args);
-	std::string username, mode, unused, realname;
 	ss >> username >> mode >> unused;
-	if (username.empty() || mode.empty() || unused.empty())
-		return;
 	std::getline(ss, realname);
+	if (username.empty() || mode.empty() || unused.empty() || realname.empty())
+	{
+		error = ERR_NEEDMOREPARAMS(std::string("Unregistred"), "USER");
+		if (send(client.getClientSocket(), error.c_str(), error.size(), 0) == -1)
+			throw std::runtime_error("Error: An error occured while sending the message!");
+		return;
+	}
 	size_t start = 0;
 	while (start < realname.size() && std::isspace(realname[start]))
 		++start;
@@ -205,7 +243,13 @@ void Server::addUser(std::string str, Client &client)
 	if (!realname.empty() && realname[0] == ':')
 	{
 		realname = realname.substr(1);
-
+		if (realname.empty())
+		{
+			error = ERR_NEEDMOREPARAMS(std::string("Unregistred"), "USER");
+			if (send(client.getClientSocket(), error.c_str(), error.size(), 0) == -1)
+				throw std::runtime_error("Error: An error occured while sending the message!");
+			return;
+		}
 		start = 0;
 		while (start < realname.size() && std::isspace(realname[start]))
 			++start;
@@ -246,13 +290,18 @@ bool	Server::handleConnexion(int fd, const std::string &str)
 		else if (line.find("USER") == 0)
 			addUser(line, client);
 	}
-	resetBuffer();
 	if(client.getRealname().size() != 0 && client.getNickname().size() != 0)
 	{
-		std::string tmp = RPL_WELCOME(client.getNickname());
+		std::string name = client.getNickname();
+		std::string tmp = WELCOME(name);
+		tmp += HOST(name);
+		tmp += DATE(name);
+		tmp += MYINFO(name);	
+		tmp	+= SERVCAP(name);
+		tmp += MOTDST(name);
+		tmp += MOTDED(name);
 		if (send(fd, tmp.c_str(), tmp.size(), 0) == -1)
 			throw std::runtime_error("Error: An error occured while sending the message!");
-		return true;
 	}
 	return false;
 }
@@ -276,7 +325,7 @@ void	Server::handleRequest(const int it)
 
 	_buffer[lenRead] = '\0';
 	getClients(_fds[it].fd).appendToBuffer(_buffer);
-	while ((fullCommand = getClients(_fds[it].fd).manageRequest()).empty() == false)
+	while ((fullCommand = getClients(_fds[it].fd).manageRequest()).empty() == false) 
 		readTheLine(fullCommand, _fds[it].fd, *this);
 	resetBuffer();
 }
@@ -301,7 +350,7 @@ Channel &Server::getChannel(const std::string& name)
 			return it->second;
 		++it;
 	}
-	static Channel fail("fail");
+	static Channel fail("no name");
 	return fail;
 }
 
@@ -328,14 +377,14 @@ void Server::handleJoinCommand(Client &client, const std::string &channelName, c
 	{
 		error = ERR_BADCHANNELKEY(CLIENT(client.getNickname(), client.getUsername()), channelName);
 		if (send(client.getClientSocket(), error.c_str(), error.size(), 0) == -1)
-			throw std::runtime_error("Error: An error occured while sending the message!");;
+			throw std::runtime_error("Error: An error occured while sending the message!");
 		return ;
 	}
 	if (channel.getPassword().empty() == false && password.empty() == true)
 	{
 		error = ERR_NEEDMOREPARAMS(CLIENT(client.getNickname(), client.getUsername()), "JOIN");
 		if (send(client.getClientSocket(), error.c_str(), error.size(), 0) == -1)
-			throw std::runtime_error("Error: An error occured while sending the message!");;
+			throw std::runtime_error("Error: An error occured while sending the message!");
 		return ;
 	}
 
@@ -345,7 +394,14 @@ void Server::handleJoinCommand(Client &client, const std::string &channelName, c
 		message = RPL_JOIN(CLIENT(client.getNickname(), client.getUsername()), channelName);
 		if (send(client.getClientSocket(), message.c_str(), message.size(), 0) == -1)
 			throw std::runtime_error("Error: An error occured while sending the message!");
-		channel.sendAllNewClient(client, channel.getName(), channel.listNicknames());
+		message = JOIN(client.getNickname(), channelName);
+		channel.sendAllChannel(message, client.getClientSocket());
+		message = RPL_NAMEREPLY(client.getNickname(), channelName, channel.listNicknames());
+		if (send(client.getClientSocket(), message.c_str(), message.length(), 0) == -1)
+			throw std::runtime_error("Error: An error occured while sending the message!");
+		message = RPL_ONLY(CLIENT(client.getNickname(), client.getUsername()), channelName);
+		if (send(client.getClientSocket(), message.c_str(), message.size(), 0) == -1)
+			throw std::runtime_error("Error: An error occured while sending the message!");
 	}
 	resetBuffer();
 }
@@ -442,11 +498,10 @@ void	Server::handleRemoveClientFomChannel(int fd, const std::string &channelName
 		error = ERR_NOSUCHCHANNEL(channelName);
 		if (send(fd, error.c_str(), error.size(), 0) == -1)
 			throw std::runtime_error("Error: An error occured while sending the message!");
-		return ;
 	}
 }
 
-bool	Server::inviteVerification(const Client &sender, const Client &target, const std::string channelName)
+bool	Server::inviteVerification(const Client &sender, const Client &target, const std::string& channelName)
 {
 	std::string error;
 	std::map<std::string, Channel>::iterator it = _channels.find(channelName);
@@ -456,7 +511,7 @@ bool	Server::inviteVerification(const Client &sender, const Client &target, cons
 		if (it->second.getClient(sender.getClientSocket()) != sender.getNickname())
 		{
 			error = ERR_NOTONCHANNEL(CLIENT(sender.getNickname(), sender.getUsername()), channelName);
-			if ((sender.getClientSocket(), error.c_str(), error.size(), 0) == -1)
+			if (send(sender.getClientSocket(), error.c_str(), error.size(), 0) == -1)
 				throw std::runtime_error("Error: An error occured while sending the message!");
 			return false;
 		}
@@ -464,14 +519,14 @@ bool	Server::inviteVerification(const Client &sender, const Client &target, cons
 		{
 			error = ERR_USERONCHANNEL(target.getNickname(), channelName);
 			if (send(sender.getClientSocket(), error.c_str(), error.size(), 0) == -1)
-				throw std::runtime_error("Error: An error occured while sending the message!");;
+				throw std::runtime_error("Error: An error occured while sending the message!");
 			return false;
 		}
 		if (it->second.getInvitOnly() == true && it->second.getOperator(sender.getClientSocket()) == false)
 		{
 			error = ERR_CHANOPRIVSNEEDED(CLIENT(sender.getNickname(), sender.getUsername()), channelName);
 			if (send(sender.getClientSocket(), error.c_str(), error.size(), 0) == -1)
-				throw std::runtime_error("Error: An error occured while sending the message!");;
+				throw std::runtime_error("Error: An error occured while sending the message!");
 			return false;
 		}
 	}
@@ -483,8 +538,7 @@ Client &Server::getClients(const int fd)
 	std::map<int, Client>::iterator it = _clientsMap.find(fd);
 	if(it == _clientsMap.end())
 	{
-		sockaddr_in addr;
-		static Client fail(-1, addr, "no name", "no nick", "no realname", true);
+		static Client fail(-1, "no name", "no nick", "no realname");
 		return fail;
 	}
 	return it->second;
@@ -498,8 +552,7 @@ Client	&Server::getClients(const std::string& name)
 		if (it->second.getNickname() == name)
 			return it->second;
 	}
-	sockaddr_in addr;
-	static Client fail(-1, addr, "no name", "no nick", "no realname", true);
+	static Client fail(-1, "no name", "no nick", "no realname");
 	return fail;
 }
 
@@ -513,17 +566,13 @@ void	Server::removeClient(int fd)
 	_clientsMap.erase(fd);
 }
 
-bool	Server::sameUsername(std::string name)
+std::string Server::listNicknames()
 {
-	try
-	{
-		Client &client = getClients(name);
-		return client.getClientSocket() != -1 && client.getNickname() == name;
-	}
-	catch (const std::exception& e)
-	{
-		return false; 
-	}
+	std::string list;
+	std::map<int, Client>::const_iterator it = _clientsMap.begin();
+	for (; it != _clientsMap.end() ; it++)
+		list += it->second.getNickname() + " ";
+	return list;
 }
 
 bool isAllWhitespace(const std::string& s) {

@@ -6,7 +6,7 @@
 /*   By: huvillat <huvillat@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 19:01:41 by rgobet            #+#    #+#             */
-/*   Updated: 2025/06/19 11:35:13 by rgobet           ###   ########.fr       */
+/*   Updated: 2025/06/27 14:44:40 by rgobet           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,23 +30,21 @@
 
 #include <map>
 #include <iostream>
-#include "Error.hpp"
+#include "Request.hpp"
 #include <netinet/in.h>
 
 class Client
 {
 private:
 	int			_clientSocket;
-	sockaddr_in	_clientAddress;
 	std::string	_nickname;
 	std::string	_username;
 	std::string _realname;
-	bool		_present;
 	bool		_passwordserver;
 	std::string	_invited;
 	std::map<int, std::string>	_partialInput;
 public:
-	Client(int clientSocket, sockaddr_in &clientAddr, std::string const &nickname, std::string const &username, std::string const &realname, bool present);
+	Client(int clientSocket, std::string const &nickname, std::string const &username, std::string const &realname);
 	~Client();
 
 	int			getClientSocket() const;
@@ -66,7 +64,7 @@ public:
 	void		setNickname(const std::string &);
 	void		setUsername(const std::string &);
 	void		setRealname(const std::string &);
-	void		setPassServ();
+	void		setPassServ(bool password);
 };
 
 std::ostream& operator<<(std::ostream& os, const Client& client);

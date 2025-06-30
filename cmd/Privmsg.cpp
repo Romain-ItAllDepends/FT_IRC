@@ -6,7 +6,7 @@
 /*   By: huvillat <huvillat@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/06 14:48:31 by rgobet            #+#    #+#             */
-/*   Updated: 2025/06/23 11:14:54 by huvillat         ###   ########.fr       */
+/*   Updated: 2025/06/25 12:41:03 by rgobet           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ void	cmdPrivmsg(std::string &str, int fd, Server &server)
 		Client &clientTarget = server.getClients(target);
 		if (clientTarget.getClientSocket() == -1)
 		{
-			error = ERR_NOSUCHNICK(CLIENT(client.getNickname(), client.getNickname()), target);
+			error = ERR_NOSUCHNICK(CLIENT(client.getNickname(), client.getUsername()), target);
 			if (send(fd, error.c_str(), error.size(), 0) == -1)
 		      throw std::runtime_error("Error: An error occured while sending the message!");
 			return ;

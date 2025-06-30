@@ -6,7 +6,7 @@
 /*   By: huvillat <huvillat@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/04 16:13:58 by rgobet            #+#    #+#             */
-/*   Updated: 2025/06/20 11:21:18 by rgobet           ###   ########.fr       */
+/*   Updated: 2025/06/25 14:52:46 by huvillat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 #include <string>
 #include <map>
-#include "Error.hpp"
+#include "Request.hpp"
 #include "Client.hpp"
 
 class Channel
@@ -56,10 +56,12 @@ class Channel
 		void	setUserLimit(size_t);
 		void	setOperator(int);
 		std::string listNicknames();
+		std::string listUsername();
+		int			nbUser();
 
 		void	channelBroadcast(const std::string &msg);
+		void	sendAllChannel(const std::string &msg, int fd);
 		void	sendAllChannel(const Client &client, const std::string &msg);
-		void	sendAllNewClient(const Client &client, const std::string &channelName, const std::string &listNicknames);
 		void	removeClientFomChannel(int fd, const std::string &str);
 		void	kickClientFomChannel(int fd);
 };

@@ -6,7 +6,7 @@
 /*   By: huvillat <huvillat@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/04 16:13:58 by rgobet            #+#    #+#             */
-/*   Updated: 2025/06/23 11:19:49 by huvillat         ###   ########.fr       */
+/*   Updated: 2025/06/27 20:44:02 by huvillat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 Channel::Channel() {}
 
-Channel::Channel(const std::string& name):_name(name), _topic(""), _topicuser(false), _password("")
+Channel::Channel(const std::string& name):_name(name), _topic(""), _topicuser(true), _password("")
 , _invitonly(false), _userlimit(-1), _nbUser(0){}
 
 Channel::~Channel() {}
@@ -60,18 +60,7 @@ void Channel::addClient(Client &client, const std::string &password)
 	}
 
 	if (_nbUser == 1 && getOperator(client.getClientSocket()) == false)
-	{
 		setOperator(client.getClientSocket());
-		message = RPL_SEETOPIC(CLIENT(client.getNickname(), client.getUsername()), getName(), "");
-		if (send(client.getClientSocket(), message.c_str(), message.size(), 0) == -1)
-			throw std::runtime_error("Error: An error occured while sending the message!");
-		message = RPL_ONLY(CLIENT(client.getNickname(), client.getUsername()), getName());
-		if (send(client.getClientSocket(), message.c_str(), message.size(), 0) == -1)
-			throw std::runtime_error("Error: An error occured while sending the message!");
-		message = RPL_CHANNELMODEIS(client.getNickname(), getName(), "+");
-		if (send(client.getClientSocket(), message.c_str(), message.size(), 0) == -1)
-			throw std::runtime_error("Error: An error occured while sending the message!");
-	}
 }
 
 void Channel::removeClient(Client &client)
@@ -118,6 +107,24 @@ std::string Channel::listNicknames()
 	return list;
 }
 
+std::string Channel::listUsername()
+{
+	std::string list;
+	std::map<int, Client>::const_iterator it = _clients.begin();
+	for (; it != _clients.end() ; it++)
+		list += it->second.getUsername() + " ";
+	return list;
+}
+
+int			Channel::nbUser()
+{
+	int nbUser = 0;
+	std::map<int, Client>::const_iterator it = _clients.begin();
+	for (; it != _clients.end() ; it++)
+		++nbUser;
+	return nbUser;
+}
+
 void	Channel::setName(std::string const &name)
 {
 	_name = name;
@@ -142,26 +149,12 @@ void	Channel::sendAllChannel(const Client &client, const std::string &msg)
 	{
 		if (client.getClientSocket() != it->second.getClientSocket())
 		{
-			message = PRIVMSG(CLIENT(client.getNickname(), client.getNickname()), this->getName(), msg);
+			message = PRIVMSG(CLIENT(client.getNickname(), client.getUsername()), this->getName(), msg);
 			if (send(it->second.getClientSocket(), message.c_str(), message.length(), 0) == -1)
 				throw std::runtime_error("Error: An error occured while sending the message!");
 		}
 	}
 }
-
-void	Channel::sendAllNewClient(const Client &client, const std::string &channelName, const std::string &listNicknames)
-{
-	std::string message;
-	std::map<int, Client>::iterator it = _clients.begin();
-	std::map<int, Client>::iterator end = _clients.end();
-	for (; it != end ; it++)
-	{
-		message = RPL_NAMEREPLY(client.getNickname(), channelName, listNicknames);
-		if (send(it->second.getClientSocket(), message.c_str(), message.length(), 0) == -1)
-			throw std::runtime_error("Error: An error occured while sending the message!");
-	}
-}
-
 
 void	Channel::removeClientFomChannel(int fd, const std::string &str)
 {
@@ -186,7 +179,7 @@ void	Channel::kickClientFomChannel(int fd)
 		removeClient(it->second);
 	else if (it == _clients.end())
 	{
-		error = ERR_USERNOTINCHANNEL(it->second.getNickname(), it->second.getNickname(), getName());
+		error = ERR_USERNOTINCHANNEL(CLIENT(it->second.getNickname(), it->second.getUsername()), it->second.getNickname(), getName());
 		if (send(fd, error.c_str(), error.length(), 0) == -1)
 			throw std::runtime_error("Error: An error occured while sending the message!");
 	}
@@ -199,6 +192,19 @@ void	Channel::channelBroadcast(const std::string &msg)
 	for (; it != end ; it++)
 		if (send(it->second.getClientSocket(), msg.c_str(), msg.length(), 0) == -1)
 			throw std::runtime_error("Error: An error occured while sending the message!");
+}
+
+void	Channel::sendAllChannel(const std::string &msg, int fd)
+{
+	std::map<int, Client>::iterator it = _clients.begin();
+	std::map<int, Client>::iterator end = _clients.end();
+	for (; it != end ; it++)
+	{
+		if (it->second.getClientSocket() == fd)
+			continue ;
+		if (send(it->second.getClientSocket(), msg.c_str(), msg.length(), 0) == -1)
+			throw std::runtime_error("Error: An error occured while sending the message!");
+	}
 }
 
 bool	Channel::getTopicUser()
@@ -275,8 +281,7 @@ Client	&Channel::getClients(const std::string &name)
 		if (it->second.getNickname() == name)
 			return it->second;
 	}
-	sockaddr_in addr;
-	static Client fail(-1, addr, "no name", "no nick", "no realname", true);
+	static Client fail(-1, "no name", "no nick", "no realname");
 	return fail;
 }
 

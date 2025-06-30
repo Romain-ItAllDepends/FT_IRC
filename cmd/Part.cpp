@@ -6,7 +6,7 @@
 /*   By: huvillat <huvillat@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/06 15:30:13 by rgobet            #+#    #+#             */
-/*   Updated: 2025/06/23 11:14:50 by huvillat         ###   ########.fr       */
+/*   Updated: 2025/06/30 08:14:29 by huvillat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ void	cmdPart(std::string &str, int fd, Server &server)
 
 	if (channelName.empty() == true)
 	{
-		Client client = server.getClients(fd);
+		Client &client = server.getClients(fd);
 		if (client.getClientSocket() == -1)
 			throw std::runtime_error("Error: This client doesn't exist!");
 		error = ERR_NEEDMOREPARAMS(CLIENT(client.getNickname(), client.getUsername()), "PART");
@@ -29,6 +29,6 @@ void	cmdPart(std::string &str, int fd, Server &server)
 		return ;
 	}
 
-	str = channelName + " " " leave";
+	str = channelName + " leave";
 	server.handleRemoveClientFomChannel(fd, channelName, str);
 }

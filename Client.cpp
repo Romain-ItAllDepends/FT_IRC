@@ -6,7 +6,7 @@
 /*   By: huvillat <huvillat@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 19:01:41 by rgobet            #+#    #+#             */
-/*   Updated: 2025/06/23 10:47:19 by rgobet           ###   ########.fr       */
+/*   Updated: 2025/06/27 14:44:21 by rgobet           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,18 +15,13 @@
 
 #include <unistd.h>
 
-Client::Client(int clientSocket, sockaddr_in &clientAddr, std::string const &nickname, std::string const &username
-	, std::string const &realname, bool present): _clientSocket(clientSocket), _clientAddress(clientAddr)
-, _nickname(nickname), _username(username), _realname(realname), _present(present), _passwordserver(false)
-, _invited("none")
+Client::Client(int clientSocket, std::string const &nickname, std::string const &username, std::string const &realname):
+	_clientSocket(clientSocket), _nickname(nickname), _username(username), _realname(realname)
+	, _passwordserver(false), _invited("none")
 {
-	if (present == false)
-	{
-		PRINTGB "New client n°" N clientSocket N " is connected!" END
-		_present = true;
-	}
 	if (_clientSocket == -1)
 		return ;
+	PRINTGB "New client n°" N clientSocket N " is connected!" END
 	if (_clientSocket > 1024 || _clientSocket < 0)
 		throw std::runtime_error("Error: A client got a wrong socket!");
 }
@@ -103,9 +98,9 @@ void		Client::setRealname(const std::string &real)
 	_realname = real;
 }
 
-void		Client::setPassServ()
+void		Client::setPassServ(const bool password)
 {
-	_passwordserver = true;
+	_passwordserver = password;
 }
 
 std::ostream& operator<<(std::ostream& os, const Client& client)

@@ -6,7 +6,7 @@
 /*   By: huvillat <huvillat@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:15:30 by rgobet            #+#    #+#             */
-/*   Updated: 2025/06/23 10:50:40 by rgobet           ###   ########.fr       */
+/*   Updated: 2025/06/26 10:38:06 by rgobet           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,12 @@ void sigquit(int pid)
 	throw std::runtime_error("Error: Ctrl+/ signal!");
 }
 
+void sigpipe(int pid)
+{
+	(void) pid;
+	throw std::runtime_error("Error: Unknown crash!");
+}
+
 int main(int ac, char **av)
 {
 	if (ac != 3)
@@ -38,6 +44,7 @@ int main(int ac, char **av)
 	{
 		signal(SIGINT, sigint);
 		signal(SIGQUIT, sigquit);
+		signal(SIGPIPE, sigpipe);
 		Server	server("JEANJAK", av[1], av[2]);
 		server.startServer();
 	}

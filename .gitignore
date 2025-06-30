@@ -1,5 +1,7 @@
 CMakeLists.txt
 *.idea
 ircserv
+bonus/bot
 *.o
+*/*.o
 .vscode

@@ -6,7 +6,7 @@
 /*   By: huvillat <huvillat@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/09 14:32:29 by rgobet            #+#    #+#             */
-/*   Updated: 2025/06/23 11:19:32 by huvillat         ###   ########.fr       */
+/*   Updated: 2025/06/27 20:33:31 by huvillat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,10 +17,18 @@ void	cmdTopic(std::string &str, int fd, Server &server)
 	std::istringstream ss(str);
 	std::string cmd, channelName, newTopic;
 	ss >> cmd >> channelName;
-	Channel &channel = server.getOrCreateChannel(channelName);
+	Channel &channel = server.getChannel(channelName);
 	std::string topic = channel.getTopic();
 	Client &client = server.getClients(fd);
-		size_t colonPos = str.find(" :");
+	size_t colonPos = str.find(" :");
+
+	if(channel.getName() == "no name")
+	{
+		std::string error = ERR_NOSUCHCHANNEL(channelName);
+		if (send(fd, error.c_str(), error.size(), 0) == -1)
+			throw std::runtime_error("Error: An error occured while sending the message!");
+		return ;
+	}
 	if (colonPos == std::string::npos)
 	{
 		if(topic.size() == 0){
@@ -31,7 +39,7 @@ void	cmdTopic(std::string &str, int fd, Server &server)
 		}
 		str = RPL_SEETOPIC(CLIENT(client.getNickname(), client.getUsername()), channelName, topic);
 		if (send(client.getClientSocket(), str.c_str(), str.size(), 0) == -1)
-			throw std::runtime_error("Error: An error occured while sending the message!");;
+			throw std::runtime_error("Error: An error occured while sending the message!");
 		return ;
 	}
 	
@@ -39,7 +47,7 @@ void	cmdTopic(std::string &str, int fd, Server &server)
 	{
 		str = ERR_CHANOPRIVSNEEDED(CLIENT(client.getNickname(), client.getUsername()), channelName);
 		if (send(client.getClientSocket(), str.c_str(), str.size(), 0) == -1)
-				throw std::runtime_error("Error: An error occured while sending the message!");;
+			throw std::runtime_error("Error: An error occured while sending the message!");
 		return ;
 	}
 	newTopic = &str[colonPos + 2];

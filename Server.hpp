@@ -6,7 +6,7 @@
 /*   By: huvillat <huvillat@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/30 13:15:30 by rgobet            #+#    #+#             */
-/*   Updated: 2025/06/23 11:28:01 by rgobet           ###   ########.fr       */
+/*   Updated: 2025/06/27 20:43:22 by huvillat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,6 @@
 #define N <<
 #define END << NC << std::endl;
 
-#include <iostream>
 #include <netinet/in.h>
 #include <vector>
 #include <map>
@@ -43,7 +42,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include "Channel.hpp"
-#include "Server.hpp"
 #include "Client.hpp"
 #include "cmd/Command.hpp"
 
@@ -84,7 +82,7 @@ public:
 	void 	removeClientFromAllChannels(Client &client);
 	void	addClient(int const &fd, Client const &newClient);
 	void	removeClient(int fd);
-	bool	inviteVerification(const Client &sender, const Client &target, const std::string channelName);
+	bool	inviteVerification(const Client &sender, const Client &target, const std::string& channelName);
 	void 	handleJoinCommand(Client &client, const std::string &channelName, const std::string &password);
 	void	handlePrivmsgCommand(const Client &client, const std::string &target, const std::string &msg);
 	void	handleRemoveClientFomChannel(int fd, const std::string &channelName, const std::string &str);
@@ -92,7 +90,7 @@ public:
 	void	addPass(std::string str, Client &client);
 	void	addNick(std::string str, Client &client);
 	void	addUser(std::string str, Client &client);
-	bool	sameUsername(std::string name);
+	std::string listNicknames();
 };
 
 bool isAllWhitespace(const std::string& s);

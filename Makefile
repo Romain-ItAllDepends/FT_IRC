@@ -2,9 +2,20 @@ NAME=ircserv
 
 MY_SOURCES= main.cpp \
 			Server.cpp \
-			Client.cpp \
 			Channel.cpp \
-			cmd/Command.cpp cmd/Invite.cpp cmd/Kick.cpp cmd/Mode.cpp cmd/Topic.cpp cmd/Join.cpp cmd/Privmsg.cpp cmd/Part.cpp cmd/Quit.cpp
+			Client.cpp \
+			cmd/Command.cpp \
+			cmd/Invite.cpp \
+			cmd/Kick.cpp \
+			cmd/Mode.cpp \
+			cmd/Topic.cpp \
+			cmd/Join.cpp \
+			cmd/Privmsg.cpp \
+			cmd/Part.cpp \
+			cmd/Quit.cpp \
+			cmd/Ping.cpp \
+			cmd/Who.cpp \
+			cmd/Nick.cpp
 
 green='\033[0;32m'
 light_cyan='\033[1;36m'

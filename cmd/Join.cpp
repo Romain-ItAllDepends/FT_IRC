@@ -6,7 +6,7 @@
 /*   By: huvillat <huvillat@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/06 11:37:42 by rgobet            #+#    #+#             */
-/*   Updated: 2025/06/23 11:14:31 by huvillat         ###   ########.fr       */
+/*   Updated: 2025/06/30 08:36:20 by huvillat         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,6 @@
 
 void joinChannel(std::string &str, int fd, Server &server)
 {
-	Client client = server.getClients(fd);
 	std::istringstream ss(str);
 	std::string cmd, channelName, key, password, error;
 	ss >> cmd >> channelName >> key;

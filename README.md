@@ -39,15 +39,6 @@ Implementing an IRC server required solving several networking problems:
 
 ---
 
-## Function references
-
-- RFC 1459
-- RFC 2812
-- man7.org
-- The Open Group
-
----
-
 ## What I learned
 
 This project gave me practical experience with low-level network programming in C++98. Building an IRC server from scratch helped me better understand TCP communication, non-blocking sockets, event-driven programming with poll(), and the challenges of implementing a real-world protocol.
@@ -85,5 +76,12 @@ The project uses the following system calls and library functions (or their equi
 - `fstat`
 - `fcntl`
 - `poll`
+
+<summary>References</summary>
+
+- RFC 1459
+- RFC 2812
+- man7.org
+- The Open Group
 
 </details>

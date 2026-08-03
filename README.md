@@ -85,9 +85,3 @@ This project gave me practical experience with low-level network programming in 
 
 Working in a team also taught me how to split responsibilities, collaborate through Git, review each other's code, and integrate features into a shared codebase.
 
-## Conclusion
-
-## Conclusion
-
-Building an IRC server from scratch gave me a deeper understanding of network programming, TCP sockets, and event-driven applications. It also allowed me to gain experience working on a collaborative C++ project while implementing a real-world communication protocol.
-

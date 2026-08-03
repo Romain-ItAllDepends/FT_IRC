@@ -4,9 +4,9 @@ FT_IRC is an IRC server written in C++98 from scratch. It implements the core IR
 
 ## Some ressources
 
-	(https://medium.com/@afatir.ahmedfatir/small-irc-server-ft-irc-42-network-7cee848de6f9)
-	(https://reactive.so/post/42-a-comprehensive-guide-to-ft_irc/)
-	(https://github.com/marineks/Ft_irc)
+- [Building a Small IRC Server - Medium](https://medium.com/@afatir.ahmedfatir/small-irc-server-ft-irc-42-network-7cee848de6f9)
+- [A Comprehensive Guide to ft_irc](https://reactive.so/post/42-a-comprehensive-guide-to-ft_irc/)
+- [Example ft_irc implementation](https://github.com/marineks/Ft_irc)
 
 ## How it works
 

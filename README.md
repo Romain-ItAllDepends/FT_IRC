@@ -38,7 +38,7 @@ Implementing an IRC server required solving several networking problems:
 - implementing IRC modes without blocking
 
 <details>
-<summary>Functions used</summary>
+<summary>## Functions used</summary>
 
 The project uses the following system calls and library functions (or their equivalents):
 

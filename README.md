@@ -69,6 +69,8 @@ The project uses the following system calls and library functions (or their equi
 - `fcntl`
 - `poll`
 
+</details>
+
 ---
 
 ## Function references

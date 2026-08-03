@@ -2,13 +2,18 @@
 
 This project is implemented in **C++ 98** and covers various essential socket and system functions such as `socket`, `close`, `setsockopt`, and many more!
 
-## Some Ressource
+## Some ressources
 
 	(https://medium.com/@afatir.ahmedfatir/small-irc-server-ft-irc-42-network-7cee848de6f9)
 	(https://reactive.so/post/42-a-comprehensive-guide-to-ft_irc/)
 	(https://github.com/marineks/Ft_irc)
 
-## Functions Used
+## How that work
+
+[Capture vidéo du 2026-08-03 17-40-35.webm](https://github.com/user-attachments/assets/91b89ebe-ac3e-47f1-9be5-a0d03df8a43d)
+
+
+## Functions used
 
 The project uses the following system calls and library functions (or their equivalents):
 

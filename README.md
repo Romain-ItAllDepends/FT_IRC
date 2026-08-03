@@ -1,6 +1,6 @@
-# FT_IRC Project
+# FT_IRC project
 
-This project is implemented in **C++ 98** and covers various essential socket and system functions such as `socket`, `close`, `setsockopt`, and many more!
+FT_IRC is an IRC server written in C++98 from scratch. It implements the core IRC protocol, handles multiple simultaneous clients using non-blocking sockets and poll(), and supports channels, operators, invitations, authentication and channel modes.
 
 ## Some ressources
 
@@ -8,10 +8,34 @@ This project is implemented in **C++ 98** and covers various essential socket an
 	(https://reactive.so/post/42-a-comprehensive-guide-to-ft_irc/)
 	(https://github.com/marineks/Ft_irc)
 
-## How that work
+## How it works
 
 [Capture vidéo du 2026-08-03 17-40-35.webm](https://github.com/user-attachments/assets/91b89ebe-ac3e-47f1-9be5-a0d03df8a43d)
 
+## Features
+
+- Non-blocking TCP server
+- Multiple simultaneous clients
+- IRC authentication (PASS, NICK, USER)
+- Channels
+- Private messages
+- Channel operators
+- INVITE mode
+- TOPIC
+- KICK
+- Password protected channels
+- User limit
+
+## Challenges
+
+Implementing an IRC server required solving several networking problems:
+
+- managing multiple clients with poll()
+- handling partial TCP packets
+- parsing IRC messages correctly
+- synchronizing channel state
+- managing operator permissions
+- implementing IRC modes without blocking
 
 ## Functions used
 
@@ -46,57 +70,24 @@ The project uses the following system calls and library functions (or their equi
 
 ---
 
-## Function References
+## Function references
 
-Below are the links for detailed documentation and usage examples for each of the key functions used in this project:
-
-### Socket and Communication Functions
-- **`socket`**: [GeeksforGeeks - Socket Programming in C++](https://www.geeksforgeeks.org/socket-programming-in-cpp/)
-- **`close`**: For file descriptor (`fd`) handling.
-- **`setsockopt`**: 
-  - [The Open Group - setsockopt](https://pubs.opengroup.org/onlinepubs/009695399/functions/setsockopt.html)
-  - [man7.org - setsockopt](https://man7.org/linux/man-pages/man2/setsockopt.2.html)
-- **`getsockname`**: [The Open Group - getsockname](https://pubs.opengroup.org/onlinepubs/9699919799/functions/getsockname.html)
-- **`getprotobyname`**: [manpages.debian.org - getprotobyname](https://manpages.debian.org/unstable/manpages-fr-dev/getprotobyname.3.fr.html)
-- **`gethostbyname`**: [manpages.debian.org - gethostbyname](https://manpages.debian.org/bookworm/manpages-fr-dev/gethostbyname.3.fr.html)
-- **`getaddrinfo`**: [man7.org - getaddrinfo](https://man7.org/linux/man-pages/man3/getaddrinfo.3.html)
-- **`freeaddrinfo`**: [manpages.debian.org - freeaddrinfo](https://manpages.debian.org/testing/manpages-fr-dev/freeaddrinfo.3.fr.html)
-
-### Socket Management Functions
-- **`bind`**: [GeeksforGeeks - bind in C++ STL](https://www.geeksforgeeks.org/working-and-examples-of-bind-in-cpp-stl/)
-- **`connect`**: [GeeksforGeeks - Socket Programming in C++](https://www.geeksforgeeks.org/socket-programming-in-cpp/)
-- **`listen`**: [man7.org - listen](https://man7.org/linux/man-pages/man2/listen.2.html)
-- **`accept`**: [GeeksforGeeks - Socket Programming in C++](https://www.geeksforgeeks.org/socket-programming-in-cpp/)
-
-### Data Conversion and Byte Order Functions
-- **`htons`**: [man7.org - htons](https://man7.org/linux/man-pages/man3/htons.3.html)
-- **`htonl`**: [man7.org - htonl](https://man7.org/linux/man-pages/man3/htons.3.html)
-- **`ntohs`**: [man7.org - ntohs](https://man7.org/linux/man-pages/man3/ntohs.3.html)
-- **`ntohl`**: [GNU - Byte Order](https://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.5/html_node/Byte-Order.html)
-- **`inet_addr`**: [The Open Group - inet_addr](https://pubs.opengroup.org/onlinepubs/7990949875/functions/inet_addr.html)
-- **`inet_ntoa`**: [man7.org - inet_ntoa](https://man7.org/linux/man-pages/man3/inet_ntoa.3.html)
-
-### Data Transmission Functions
-- **`send`**: [The Open Group - send](https://pubs.opengroup.org/onlinepubs/009604399/functions/send.html)
-- **`recv`**: [The Open Group - recv](https://pubs.opengroup.org/onlinepubs/000095399/functions/recv.html)
-
-### Signal Handling Functions
-- **`signal`**: [GeeksforGeeks - Signal Handling in C++](https://www.geeksforgeeks.org/signal-handling-in-cpp/)
-- **`sigaction`**: [man7.org - sigaction](https://man7.org/linux/man-pages/man2/sigaction.2.html)
-
-### File Management and Control Functions
-- **`lseek`**: [man7.org - lseek](https://man7.org/linux/man-pages/man2/lseek.2.html)
-- **`fstat`**: [The Open Group - fstat](https://pubs.opengroup.org/onlinepubs/9699919799/functions/fstat.html)
-- **`fcntl`**: [The Open Group - fcntl](https://pubs.opengroup.org/onlinepubs/9699969799/functions/fcntl.html)
-
-### Event Polling
-- **`poll`**: [man7.org - poll](https://man7.org/linux/man-pages/man2/poll.2.html)
+- RFC 1459
+- RFC 2812
+- man7.org
+- The Open Group
 
 ---
 
+## What I learn
+
+This project gave me practical experience with low-level network programming in C++98. Building an IRC server from scratch helped me better understand TCP communication, non-blocking sockets, event-driven programming with poll(), and the challenges of implementing a real-world protocol.
+
+Working in a team also taught me how to split responsibilities, collaborate through Git, review each other's code, and integrate features into a shared codebase.
+
 ## Conclusion
 
-This project involves a wide range of system calls and socket programming techniques, primarily focusing on networking, file handling, and signal processing in C++98. The documentation provided here should help you understand the usage and implementation details of each function used.
+## Conclusion
 
-For more information on C++ system programming, feel free to refer to the links above!
+Building an IRC server from scratch gave me a deeper understanding of network programming, TCP sockets, and event-driven applications. It also allowed me to gain experience working on a collaborative C++ project while implementing a real-world communication protocol.
 

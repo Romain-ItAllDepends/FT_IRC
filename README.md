@@ -37,6 +37,13 @@ Implementing an IRC server required solving several networking problems:
 - managing operator permissions
 - implementing IRC modes without blocking
 
+## References
+
+- RFC 1459
+- RFC 2812
+- man7.org
+- The Open Group
+
 ---
 
 ## What I learned
@@ -76,12 +83,5 @@ The project uses the following system calls and library functions (or their equi
 - `fstat`
 - `fcntl`
 - `poll`
-
-<summary>References</summary>
-
-- RFC 1459
-- RFC 2812
-- man7.org
-- The Open Group
 
 </details>

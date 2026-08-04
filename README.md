@@ -2,8 +2,6 @@
 
 FT_IRC is an IRC server written in C++98 from scratch. It implements the core IRC protocol, handles multiple simultaneous clients using non-blocking sockets and poll(), and supports channels, operators, invitations, authentication and channel modes.
 
----
-
 ## Some ressources
 
 - [Building a Small IRC Server - Medium](https://medium.com/@afatir.ahmedfatir/small-irc-server-ft-irc-42-network-7cee848de6f9)

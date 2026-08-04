@@ -1,4 +1,5 @@
 # FT_IRC
+
 FT_IRC is an IRC server written in C++98 from scratch. It implements the core IRC protocol, handles multiple simultaneous clients using non-blocking sockets and poll(), and supports channels, operators, invitations, authentication and channel modes.
 
 ## Some ressources
